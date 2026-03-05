@@ -11,6 +11,8 @@ Production-oriented backend for RayCare using:
 - JWT + RBAC
 - ReportLab PDF generation
 
+API testing guide: `API_TESTING.md`
+
 ## Folder Structure
 
 ```text
@@ -103,6 +105,9 @@ terraform apply
 
 5. Use output `api_endpoint` as base URL.
 
+For SAM deploy with named IAM resources, include:
+`--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM`
+
 ## Required Environment Variables (set by Terraform)
 
 - `JWT_SECRET`
@@ -134,11 +139,10 @@ Workflow file: `.github/workflows/deploy-raycare.yml`
 PR checks workflow: `.github/workflows/pr-checks.yml`
 
 Required GitHub repository secrets:
-Required GitHub repository secrets:
 - `AWS_ROLE_ARN` (OIDC role for GitHub Actions)
 - `AWS_REGION` (example: `ap-south-1`)
-- `JWT_SECRET` - iveoraRaycare
-- `MEDICAL_RECORDS_BUCKET_NAME` (must be globally unique)raycare-medical-dev-bucket
+- `JWT_SECRET`
+- `MEDICAL_RECORDS_BUCKET_NAME` (must be globally unique)
 
 PR pipeline runs:
 - Python syntax compile (`python -m compileall src`)
