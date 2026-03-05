@@ -1,0 +1,527 @@
+﻿AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: RayCare serverless backend (SAM)
+
+Parameters:
+  StageName:
+    Type: String
+    Default: prod
+  JwtSecret:
+    Type: String
+    NoEcho: true
+  JwtIssuer:
+    Type: String
+    Default: raycare-api
+  MedicalRecordsBucketName:
+    Type: String
+    Default: raycare-medical-records
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 30
+    MemorySize: 512
+    Tracing: Active
+    Environment:
+      Variables:
+        JWT_SECRET: !Ref JwtSecret
+        JWT_ISSUER: !Ref JwtIssuer
+        USERS_TABLE: !Ref UsersTable
+        SESSIONS_TABLE: !Ref SessionsTable
+        SERVICES_TABLE: !Ref ServicesTable
+        SERVICE_REQUESTS_TABLE: !Ref ServiceRequestsTable
+        ASSIGNMENTS_TABLE: !Ref AssignmentsTable
+        HEALTH_EVENTS_TABLE: !Ref HealthEventsTable
+        EMERGENCY_CASES_TABLE: !Ref EmergencyCasesTable
+        NOTIFICATIONS_TABLE: !Ref NotificationsTable
+        SUBSCRIPTIONS_TABLE: !Ref SubscriptionsTable
+        MEDICATION_REMINDERS_TABLE: !Ref MedicationRemindersTable
+        MEDICAL_RECORDS_BUCKET: !Ref MedicalRecordsBucket
+
+Resources:
+  RayCareHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref StageName
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      TableName: raycare-users
+      AttributeDefinitions:
+        - AttributeName: phone_number
+          AttributeType: S
+        - AttributeName: user_name
+          AttributeType: S
+      KeySchema:
+        - AttributeName: phone_number
+          KeyType: HASH
+        - AttributeName: user_name
+          KeyType: RANGE
+
+  SessionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      TableName: raycare-sessions
+      AttributeDefinitions:
+        - AttributeName: session_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: session_id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+
+  ServicesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      TableName: raycare-services
+      AttributeDefinitions:
+        - AttributeName: UUID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: UUID
+          KeyType: HASH
+
+  ServiceRequestsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      TableName: raycare-service-requests
+      AttributeDefinitions:
+        - AttributeName: UUID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: UUID
+          KeyType: HASH
+
+  AssignmentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      TableName: raycare-assignments
+      AttributeDefinitions:
+        - AttributeName: UUID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: UUID
+          KeyType: HASH
+
+  HealthEventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      TableName: raycare-health-events
+      AttributeDefinitions:
+        - AttributeName: UUID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: UUID
+          KeyType: HASH
+
+  EmergencyCasesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      TableName: raycare-emergency-cases
+      AttributeDefinitions:
+        - AttributeName: UUID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: UUID
+          KeyType: HASH
+
+  NotificationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      TableName: raycare-notifications
+      AttributeDefinitions:
+        - AttributeName: UUID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: UUID
+          KeyType: HASH
+
+  SubscriptionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      TableName: raycare-subscriptions
+      AttributeDefinitions:
+        - AttributeName: UUID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: UUID
+          KeyType: HASH
+
+  MedicationRemindersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      TableName: raycare-medication-reminders
+      AttributeDefinitions:
+        - AttributeName: UUID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: UUID
+          KeyType: HASH
+
+  MedicalRecordsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref MedicalRecordsBucketName
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  RayCareAlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: raycare-alerts
+
+  CommonFunctionPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: raycare-common-function-policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:GetItem
+              - dynamodb:UpdateItem
+              - dynamodb:Scan
+              - dynamodb:Query
+            Resource:
+              - !GetAtt UsersTable.Arn
+              - !GetAtt SessionsTable.Arn
+              - !GetAtt ServicesTable.Arn
+              - !GetAtt ServiceRequestsTable.Arn
+              - !GetAtt AssignmentsTable.Arn
+              - !GetAtt HealthEventsTable.Arn
+              - !GetAtt EmergencyCasesTable.Arn
+              - !GetAtt NotificationsTable.Arn
+              - !GetAtt SubscriptionsTable.Arn
+              - !GetAtt MedicationRemindersTable.Arn
+          - Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:GetObject
+              - s3:ListBucket
+            Resource:
+              - !GetAtt MedicalRecordsBucket.Arn
+              - !Sub '${MedicalRecordsBucket.Arn}/*'
+          - Effect: Allow
+            Action:
+              - sns:Publish
+            Resource: '*'
+
+  AuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: raycare-auth
+      CodeUri: .
+      Handler: src.handlers.auth.lambda_handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - !Ref CommonFunctionPolicy
+      Events:
+        SendOtp:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /auth/send-otp
+            Method: POST
+        VerifyOtp:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /auth/verify-otp
+            Method: POST
+        Register:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /auth/register
+            Method: POST
+        Logout:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /auth/logout
+            Method: POST
+
+  PatientFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: raycare-patient
+      CodeUri: .
+      Handler: src.handlers.patient.lambda_handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - !Ref CommonFunctionPolicy
+      Events:
+        PatientProfile:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /patient/profile
+            Method: GET
+        EditProfile:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /patient/edit-profile
+            Method: POST
+        RaiseService:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /health/raise-service
+            Method: POST
+        BookAppointment:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /patient/book-appointment
+            Method: POST
+        PatientAppointments:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /patient/appointments
+            Method: GET
+        PatientHistory:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /patient/history
+            Method: GET
+        Sos:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /health/sos
+            Method: POST
+
+  NurseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: raycare-nurse
+      CodeUri: .
+      Handler: src.handlers.nurse.lambda_handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - !Ref CommonFunctionPolicy
+      Events:
+        NurseAssignedServices:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /nurse/assigned-services
+            Method: GET
+        NurseStartVisit:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /nurse/start-visit
+            Method: POST
+        NurseSubmitVisit:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /nurse/submit-visit
+            Method: POST
+
+  DoctorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: raycare-doctor
+      CodeUri: .
+      Handler: src.handlers.doctor.lambda_handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - !Ref CommonFunctionPolicy
+      Events:
+        DoctorAppointments:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /doctor/appointments
+            Method: GET
+        GeneratePrescription:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /doctor/generate-prescription
+            Method: POST
+        AddMedication:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /doctor/add-medication
+            Method: POST
+        DoctorPatientHistory:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /doctor/patient-history
+            Method: GET
+
+  AdminFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: raycare-admin
+      CodeUri: .
+      Handler: src.handlers.admin.lambda_handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - !Ref CommonFunctionPolicy
+      Events:
+        AdminServiceRequests:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /admin/service-requests
+            Method: GET
+        AdminAssignNurse:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /admin/assign-nurse
+            Method: POST
+
+  SuperAdminFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: raycare-super-admin
+      CodeUri: .
+      Handler: src.handlers.super_admin.lambda_handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - !Ref CommonFunctionPolicy
+      Events:
+        SuperAdminCreateUser:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /superadmin/create-user
+            Method: POST
+        SuperAdminAssignDoctor:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /superadmin/assign-doctor
+            Method: POST
+        SuperAdminCreateService:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /superadmin/create-service
+            Method: POST
+        SuperAdminAllUsers:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /superadmin/all-users
+            Method: GET
+        SuperAdminSystemData:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /superadmin/system-data
+            Method: GET
+
+  SubscriptionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: raycare-subscription
+      CodeUri: .
+      Handler: src.handlers.subscription.lambda_handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - !Ref CommonFunctionPolicy
+      Events:
+        SubscriptionPurchase:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /subscription/purchase
+            Method: POST
+        SubscriptionStatus:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref RayCareHttpApi
+            Path: /subscription/status
+            Method: GET
+
+  MedicationSchedulerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: raycare-medication-scheduler
+      CodeUri: .
+      Handler: src.scheduler.medication_scheduler.lambda_handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - !Ref CommonFunctionPolicy
+
+  SchedulerInvokeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: raycare-scheduler-invoke
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: invoke-medication-scheduler
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt MedicationSchedulerFunction.Arn
+
+  MedicationReminderSchedule:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: raycare-medication-reminder
+      ScheduleExpression: rate(1 minute)
+      FlexibleTimeWindow:
+        Mode: OFF
+      Target:
+        Arn: !GetAtt MedicationSchedulerFunction.Arn
+        RoleArn: !GetAtt SchedulerInvokeRole.Arn
+        Input: '{}'
+
+  SchedulerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref MedicationSchedulerFunction
+      Principal: scheduler.amazonaws.com
+      SourceArn: !GetAtt MedicationReminderSchedule.Arn
+
+Outputs:
+  ApiEndpoint:
+    Description: RayCare API endpoint
+    Value: !Sub 'https://${RayCareHttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}'
+  MedicalRecordsBucket:
+    Value: !Ref MedicalRecordsBucket
