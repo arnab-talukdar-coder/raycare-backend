@@ -50,7 +50,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       BillingMode: PAY_PER_REQUEST
-      TableName: raycare-users
+      TableName: !Sub raycare-users-${StageName}
       AttributeDefinitions:
         - AttributeName: phone_number
           AttributeType: S
@@ -66,7 +66,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       BillingMode: PAY_PER_REQUEST
-      TableName: raycare-sessions
+      TableName: !Sub raycare-sessions-${StageName}
       AttributeDefinitions:
         - AttributeName: session_id
           AttributeType: S
@@ -81,7 +81,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       BillingMode: PAY_PER_REQUEST
-      TableName: raycare-services
+      TableName: !Sub raycare-services-${StageName}
       AttributeDefinitions:
         - AttributeName: UUID
           AttributeType: S
@@ -93,7 +93,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       BillingMode: PAY_PER_REQUEST
-      TableName: raycare-service-requests
+      TableName: !Sub raycare-service-requests-${StageName}
       AttributeDefinitions:
         - AttributeName: UUID
           AttributeType: S
@@ -105,7 +105,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       BillingMode: PAY_PER_REQUEST
-      TableName: raycare-assignments
+      TableName: !Sub raycare-assignments-${StageName}
       AttributeDefinitions:
         - AttributeName: UUID
           AttributeType: S
@@ -117,7 +117,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       BillingMode: PAY_PER_REQUEST
-      TableName: raycare-health-events
+      TableName: !Sub raycare-health-events-${StageName}
       AttributeDefinitions:
         - AttributeName: UUID
           AttributeType: S
@@ -129,7 +129,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       BillingMode: PAY_PER_REQUEST
-      TableName: raycare-emergency-cases
+      TableName: !Sub raycare-emergency-cases-${StageName}
       AttributeDefinitions:
         - AttributeName: UUID
           AttributeType: S
@@ -141,7 +141,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       BillingMode: PAY_PER_REQUEST
-      TableName: raycare-notifications
+      TableName: !Sub raycare-notifications-${StageName}
       AttributeDefinitions:
         - AttributeName: UUID
           AttributeType: S
@@ -153,7 +153,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       BillingMode: PAY_PER_REQUEST
-      TableName: raycare-subscriptions
+      TableName: !Sub raycare-subscriptions-${StageName}
       AttributeDefinitions:
         - AttributeName: UUID
           AttributeType: S
@@ -165,7 +165,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       BillingMode: PAY_PER_REQUEST
-      TableName: raycare-medication-reminders
+      TableName: !Sub raycare-medication-reminders-${StageName}
       AttributeDefinitions:
         - AttributeName: UUID
           AttributeType: S
@@ -192,12 +192,12 @@ Resources:
   RayCareAlertsTopic:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: raycare-alerts
+      TopicName: !Sub raycare-alerts-${StageName}
 
   CommonFunctionPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: raycare-common-function-policy
+      ManagedPolicyName: !Sub raycare-common-function-policy-${StageName}
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -235,7 +235,7 @@ Resources:
   AuthFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: raycare-auth
+      FunctionName: !Sub raycare-auth-${StageName}
       CodeUri: .
       Handler: src.handlers.auth.lambda_handler
       Policies:
@@ -270,7 +270,7 @@ Resources:
   PatientFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: raycare-patient
+      FunctionName: !Sub raycare-patient-${StageName}
       CodeUri: .
       Handler: src.handlers.patient.lambda_handler
       Policies:
@@ -323,7 +323,7 @@ Resources:
   NurseFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: raycare-nurse
+      FunctionName: !Sub raycare-nurse-${StageName}
       CodeUri: .
       Handler: src.handlers.nurse.lambda_handler
       Policies:
@@ -352,7 +352,7 @@ Resources:
   DoctorFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: raycare-doctor
+      FunctionName: !Sub raycare-doctor-${StageName}
       CodeUri: .
       Handler: src.handlers.doctor.lambda_handler
       Policies:
@@ -387,7 +387,7 @@ Resources:
   AdminFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: raycare-admin
+      FunctionName: !Sub raycare-admin-${StageName}
       CodeUri: .
       Handler: src.handlers.admin.lambda_handler
       Policies:
@@ -410,7 +410,7 @@ Resources:
   SuperAdminFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: raycare-super-admin
+      FunctionName: !Sub raycare-super-admin-${StageName}
       CodeUri: .
       Handler: src.handlers.super_admin.lambda_handler
       Policies:
@@ -451,7 +451,7 @@ Resources:
   SubscriptionFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: raycare-subscription
+      FunctionName: !Sub raycare-subscription-${StageName}
       CodeUri: .
       Handler: src.handlers.subscription.lambda_handler
       Policies:
@@ -474,7 +474,7 @@ Resources:
   MedicationSchedulerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: raycare-medication-scheduler
+      FunctionName: !Sub raycare-medication-scheduler-${StageName}
       CodeUri: .
       Handler: src.scheduler.medication_scheduler.lambda_handler
       Policies:
@@ -484,7 +484,7 @@ Resources:
   SchedulerInvokeRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: raycare-scheduler-invoke
+      RoleName: !Sub raycare-scheduler-invoke-${StageName}
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -504,7 +504,7 @@ Resources:
   MedicationReminderSchedule:
     Type: AWS::Scheduler::Schedule
     Properties:
-      Name: raycare-medication-reminder
+      Name: !Sub raycare-medication-reminder-${StageName}
       ScheduleExpression: rate(1 minute)
       FlexibleTimeWindow:
         Mode: "OFF"
