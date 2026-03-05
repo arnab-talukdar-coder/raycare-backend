@@ -134,10 +134,11 @@ Workflow file: `.github/workflows/deploy-raycare.yml`
 PR checks workflow: `.github/workflows/pr-checks.yml`
 
 Required GitHub repository secrets:
+Required GitHub repository secrets:
 - `AWS_ROLE_ARN` (OIDC role for GitHub Actions)
 - `AWS_REGION` (example: `ap-south-1`)
-- `JWT_SECRET`
-- `MEDICAL_RECORDS_BUCKET_NAME` (must be globally unique)
+- `JWT_SECRET` - iveoraRaycare
+- `MEDICAL_RECORDS_BUCKET_NAME` (must be globally unique)raycare-medical-dev-bucket
 
 PR pipeline runs:
 - Python syntax compile (`python -m compileall src`)

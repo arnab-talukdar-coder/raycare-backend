@@ -507,7 +507,7 @@ Resources:
       Name: raycare-medication-reminder
       ScheduleExpression: rate(1 minute)
       FlexibleTimeWindow:
-        Mode: OFF
+        Mode: "OFF"
       Target:
         Arn: !GetAtt MedicationSchedulerFunction.Arn
         RoleArn: !GetAtt SchedulerInvokeRole.Arn
