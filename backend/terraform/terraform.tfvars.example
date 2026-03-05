@@ -1,0 +1,5 @@
+aws_region             = "us-east-1"
+project_name           = "raycare"
+stage                  = "prod"
+jwt_secret             = "replace-with-strong-secret"
+medical_records_bucket = "raycare-medical-records"
