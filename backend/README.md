@@ -131,9 +131,24 @@ terraform apply
 ## GitHub Auto Deploy
 
 Workflow file: `.github/workflows/deploy-raycare.yml`
+PR checks workflow: `.github/workflows/pr-checks.yml`
 
 Required GitHub repository secrets:
 - `AWS_ROLE_ARN` (OIDC role for GitHub Actions)
 - `AWS_REGION` (example: `ap-south-1`)
-- `JWT_SECRET` - iveoraRaycare
-- `MEDICAL_RECORDS_BUCKET_NAME` (must be globally unique)raycare-medical-dev-bucket
+- `JWT_SECRET`
+- `MEDICAL_RECORDS_BUCKET_NAME` (must be globally unique)
+
+PR pipeline runs:
+- Python syntax compile (`python -m compileall src`)
+- SAM template validation (`sam validate --lint`)
+- Terraform format check (`terraform fmt -check -recursive`)
+- Terraform validate (`terraform init -backend=false && terraform validate`)
+
+## OTP Testing Without SMS Provider
+
+- OTP is always stored in DynamoDB `raycare-sessions` table (`otp_code` field).
+- Current template/workflow deployment is set for testing:
+  - `SMS_ENABLED=false`
+  - `OTP_DEBUG_MODE=true`
+- With this, `POST /auth/send-otp` returns `otp_code` in API response so you can test login without receiving SMS.

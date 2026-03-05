@@ -37,6 +37,8 @@ Globals:
         SUBSCRIPTIONS_TABLE: !Ref SubscriptionsTable
         MEDICATION_REMINDERS_TABLE: !Ref MedicationRemindersTable
         MEDICAL_RECORDS_BUCKET: !Ref MedicalRecordsBucket
+        SMS_ENABLED: "false"
+        OTP_DEBUG_MODE: "true"
 
 Resources:
   RayCareHttpApi:

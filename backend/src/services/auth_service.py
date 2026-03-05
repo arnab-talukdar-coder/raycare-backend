@@ -26,7 +26,10 @@ def send_otp(phone_number: str):
         }
     )
     send_sms(phone_number, f"Your RayCare OTP is {otp}. Valid for 10 minutes.")
-    return {"message": "OTP sent"}
+    response = {"message": "OTP sent", "delivery": "SMS" if settings.sms_enabled else "TABLE_ONLY"}
+    if settings.otp_debug_mode:
+        response["otp_code"] = otp
+    return response
 
 
 def verify_otp(phone_number: str, otp_code: str):

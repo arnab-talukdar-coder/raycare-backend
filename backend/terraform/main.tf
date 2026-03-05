@@ -29,6 +29,8 @@ locals {
     SUBSCRIPTIONS_TABLE        = local.table_names.subscriptions
     MEDICATION_REMINDERS_TABLE = local.table_names.medication_reminders
     MEDICAL_RECORDS_BUCKET     = aws_s3_bucket.medical_records.id
+    SMS_ENABLED                = "false"
+    OTP_DEBUG_MODE             = "true"
   }
   lambda_layers = var.dependency_layer_arn != "" ? [var.dependency_layer_arn] : []
 

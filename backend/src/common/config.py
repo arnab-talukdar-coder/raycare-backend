@@ -20,6 +20,8 @@ class Settings:
 
     medical_records_bucket = os.getenv("MEDICAL_RECORDS_BUCKET", "raycare-medical-records")
     sns_sender_id = os.getenv("SNS_SENDER_ID", "RayCare")
+    sms_enabled = os.getenv("SMS_ENABLED", "true").lower() == "true"
+    otp_debug_mode = os.getenv("OTP_DEBUG_MODE", "false").lower() == "true"
 
 
 settings = Settings()
